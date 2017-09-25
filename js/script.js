@@ -13,6 +13,14 @@ function $(className){
 	}
 };
 
+function addEvent(elem, type, handler){
+	if(document.addEventListener){
+		elem.addEventListener(type, handler, false);
+	}else{
+		elem.attachEvent('on' + type, handler);
+	}
+};
+
 window.onload = function(){
 	var container = $(".container"),
 		box = $(".box"),	    //列表外层容器
@@ -22,16 +30,15 @@ window.onload = function(){
 		result = $(".result"),
 		frameTop = frame.offsetTop,		            //中间框的top值
 		lineHeight = li[0].offsetHeight || 32;      
+		// lineHeight = 20;
 		flag = false,
-		prevNode = null; //保存前一个元素
+		prevNode = null, //保存前一个元素
+		timer = null;
 
-	//禁止元素被选中
-	// if(document.all){
-	// 	li.onselectstart = function(){return false;}
-	// }else{
-	// 	li.onmousedown = function(){return false;}
-	// 	li.onmouseup = function(){return false;}
-	// }
+	//禁止元素被选中,IE9-
+	if(document.all){
+		document.body.onselectstart = document.body.ondrag = function(){return false;}
+	}
 
 	//初始化列表位置
 	box.style.top = frameTop + "px";
@@ -47,6 +54,7 @@ window.onload = function(){
 
 		switch(event.type){
 			case "mousedown":
+				clearInterval(timer);
 				flag = true;
 				startY = event.clientY;  //点击位置坐标
 				listTop = list.offsetTop;//记录初始top
@@ -70,6 +78,7 @@ window.onload = function(){
 			listHeight = list.offsetHeight,		   //列表height
 			diffVal,							   //偏差距离
 			halfVal = Math.round(lineHeight / 2);  //判断依据
+		var distance;
 
 		//保证列表内容在选中框内
 		if(listEndTop > 0){
@@ -88,20 +97,31 @@ window.onload = function(){
 			list.style.top = listEndTop + diffVal + "px";
 		}
 	}
+
+	function animateTo(top, distance){
+		
+	};
+
 	//利用调整位置后的数据计算选中项
 	function check(){
 		var listEndTop = list.offsetTop,
+			diffVal;
+
+		if(listEndTop > 0){
+			diffVal = 0;
+		}else{
 			diffVal = Math.abs(listEndTop) / lineHeight;
+		}
 
 		//初始判断
 		if(!prevNode){
 			prevNode = li[diffVal];
-			prevNode.classList.add("act");
+			prevNode.className = "act";
 		}
 
 		if(prevNode != li[diffVal]){
-			prevNode.classList.remove("act");
-			li[diffVal].classList.add("act");
+			prevNode.className = "";
+			li[diffVal].className = "act";
 			prevNode = li[diffVal];		//保存选中元素
 		}
 		
@@ -132,9 +152,9 @@ window.onload = function(){
 		check();
 	}
 
-	container.addEventListener("mousewheel", wheelDelta, false);
-	container.addEventListener("DOMMouseScroll", wheelDelta, false);
-	container.addEventListener("mousedown", moveList, false);
-	document.addEventListener("mousemove", moveList, false);
-	document.addEventListener("mouseup", moveList, false);
+	addEvent(container, "mousewheel", wheelDelta);
+	addEvent(container, "DOMMouseScroll", wheelDelta);
+	addEvent(container, "mousedown", moveList);
+	addEvent(document, "mousemove", moveList);
+	addEvent(document, "mouseup", moveList);;
 }
