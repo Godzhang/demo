@@ -181,9 +181,9 @@ window.onload = function(){
 
 		var delta = event.wheelDelta || -event.detail * 40;
 
-		if(delta < 0 && cur > frameHeight - listHeight + lineHeight){
+		if(delta < 0 && cur >= frameHeight - listHeight + lineHeight){
 			cur -= 50;
-		}else if(delta > 0 && cur < -lineHeight){
+		}else if(delta > 0 && cur <= -lineHeight){
 			cur += 50;
 		}
 
