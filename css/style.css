@@ -1,9 +1,12 @@
-body{height: 2000px;}
-
-.container{position: absolute;left:50%;top: 200px;width: 300px;height: 300px;border: 1px solid #aaa;margin-left: -150px;overflow: hidden;cursor: pointer;background: #e5e5e5;}
+.container{position: absolute;left:50px;top: 50px;width: 300px;height: 500px;border: 1px solid #aaa;overflow: hidden;cursor: pointer;background: #e5e5e5;}
 .box{position: absolute;top: 0;left: 0;width: 100%;height: 100%;}
-.box ul{width: 100%;user-select: none;}
-.box ul li{height: 32px;line-height: 32px;text-align: center;font-size: 18px;color: #333;}
-.box ul li.act{font-size: 24px;color: #ff7300;}
-.frame{position: absolute;width: 100%;height: 30px;border-top: 1px solid #aaa;border-bottom: 1px solid #aaa;top: 50%;margin-top: -15px;}
-.result{position: absolute;width: 300px;height: 30px;border: 1px solid #aaa;top: 550px;left: 50%;margin-left: -150px;text-align: center;line-height: 30px;font-size: 24px;}
+.box ul{width: 100%;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}
+.box ul li{height: 52px;line-height: 52px;text-align: center;font-size: 18px;color: #333;}
+.box ul li.act{font-size: 30px;color: #ff7300;}
+.frame{position: absolute;width: 100%;height: 50px;border-top: 1px solid #aaa;border-bottom: 1px solid #aaa;top: 50%;margin-top: -25px;}
+.result{position: absolute;width: 300px;height: 30px;border: 1px solid #aaa;top: 580px;left: 50px;text-align: center;line-height: 30px;font-size: 24px;}
+
+.command{position: absolute;left: 400px;top: 50px;border: 1px solid #000;width: 300px;padding: 10px;}
+.command h3{font-size: 20px;background: #eee;line-height: 30px;height: 30px;padding-left: 5px;margin-bottom: 5px;}
+.command p{font-size: 14px;line-height: 20px;}
+.command p+p{margin-top: 5px;}
