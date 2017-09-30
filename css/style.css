@@ -1,8 +1,7 @@
 .container{position: absolute;left:50px;top: 50px;width: 300px;height: 500px;border: 1px solid #aaa;overflow: hidden;cursor: pointer;background: #e5e5e5;}
-.box{position: absolute;top: 0;left: 0;width: 100%;height: 100%;}
-.box ul{width: 100%;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}
-.box ul li{height: 52px;line-height: 52px;text-align: center;font-size: 18px;color: #333;}
-.box ul li.act{font-size: 30px;color: #ff7300;}
+.container ul{width: 100%;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}
+.container ul li{height: 52px;line-height: 52px;text-align: center;font-size: 18px;color: #333;}
+.container ul li.act{font-size: 30px;color: #ff7300;}
 .frame{position: absolute;width: 100%;height: 50px;border-top: 1px solid #aaa;border-bottom: 1px solid #aaa;top: 50%;margin-top: -25px;}
 .result{position: absolute;width: 300px;height: 30px;border: 1px solid #aaa;top: 580px;left: 50px;text-align: center;line-height: 30px;font-size: 24px;}
 

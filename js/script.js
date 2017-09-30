@@ -1,116 +1,141 @@
-window.onload = function(){
-	var container = document.querySelector(".container"),
-		box = container.querySelector(".box"),	    //列表外层容器
-		list = container.querySelector(".list"),    //列表
-		li = list.getElementsByTagName("li"),	    //列表项
-		frame = container.querySelector(".frame"),  //选中框
-		result = document.querySelector(".result"),
-		frameTop = frame.offsetTop,		            //中间框的top值
-		lineHeight = li[0].offsetHeight || 32;      
-		flag = false,
-		prevNode = null; //保存前一个元素
+var UI = UI || {};
+!function(){
+	function Scroll(options){
+		this.opt = Object.assign({
+			el: '',
+			change: function(){}
+		},options);
 
-	//初始化列表位置
-	box.style.top = frameTop + "px";
-	//检测选中项
-	check();
+		//dom
+		this.el = this.opt.el;
+		this.ul = this.el.querySelector('ul');
+		this.li = this.ul.querySelectorAll('li');
 
-	var listTop,
-		startY,  //初始坐标
-		diffY = 0;  //坐标差
+		//初始化变量
+		this.h = parseInt(getComputedStyle(this.li[0])['height']);  //选项元素高度
+		this.f = ( parseInt(getComputedStyle(this.el)['height']) - this.h ) / 2;  //初始化偏移量
+		this.ul.style['margin-top'] = this.f + 'px';
 
-	function moveList(event){
-		event = event || window.event;
+		//过程选项
+		this.p; 						//onstart ul的起始位置 
+		this._p;						//onend   ul结束位置或者目标位置
+		this.t;							//鼠标点击或touch开始 的 时间
+		this.start;						//鼠标或touch 起点位置
+		this.stop;						//鼠标或touch 终点位置
 
-		switch(event.type){
-			case "mousedown":
-				flag = true;
-				startY = event.clientY;  //点击位置坐标
-				listTop = list.offsetTop;//记录初始top
-				break;
-			case "mousemove":
-				if(flag){
-					diffY = event.clientY - startY;
-					list.style.top = listTop + diffY + "px";
-				}				
-				break;
-			case "mouseup":
-				flag = false;
-				correct();  //矫正位置
-				check();    //确定选项
-				break;
+		//可设置选项
+		this.change = this.opt.change;	//触发选项 change 事件 function
+		this.min = 0;					//可选项的起点索引
+		this.max = this.li.length -1;	//可选项的终点索引
+		this.index = 0 ;				//当前选中值的索引
+
+		if(this.el){
+			this._startHandler = this._onStart.bind(this);
+			this._moveHandler = this._onMove.bind(this);
+			this._endHandler = this._onEnd.bind(this);
+
+			this.el.addEventListener('mousedown', this._startHandler, false);
+			this.el.addEventListener('touchstart', this._startHandler, false);
+			this.el.addEventListener('touchmove', this._moveHandler, false);
+			this.el.addEventListener('touchend', this._endHandler, false);
+		}
+
+		var _this = this;
+		this.ul.addEventListener('transitionend', this._onChange.bind(this));
+	}
+
+	Scroll.prototype._onStart = function(e){
+		e.preventDefault();
+		e.stopPropagation();
+
+		this.start = e.changedTouches ? e.changedTouches[0].pageY : e.pageY;  //记录起点坐标
+		this.t = new Date(); 												  //记录开始点击时间
+		this.p = this._getPosition() || 0;
+
+		this._onScroll(this.p); // 处理移动中点击定位
+
+		if(e.type === 'mousedown'){
+			document.addEventListener('mousemove', this._moveHandler, false);
+			document.addEventListener('mouseup', this._endHandler, false);
+		}
+
+	}
+
+	Scroll.prototype._onMove = function(e){
+		e.preventDefault();
+		e.stopPropagation();
+
+		this.stop = e.changedTouches ? e.changedTouches[0].pageY : e.pageY;
+
+		if(Math.abs( this.stop - this.start ) > 3){
+			//处理拖拽中ul的定位
+			this._onScroll( this._adjustPosition( this.p + (this.start - this.stop) / this.h, this.min - 1, this.max + 1 ) );
 		}
 	}
 
-	function correct(){
-		var listEndTop = list.offsetTop,     	   //列表top
-			listHeight = list.offsetHeight,		   //列表height
-			diffVal,							   //偏差距离
-			halfVal = Math.round(lineHeight / 2);  //判断依据
+	Scroll.prototype._onEnd = function(e){
+		e.preventDefault();
+		e.stopPropagation();
 
-		//保证列表内容在选中框内
-		if(listEndTop > 0){
-			list.style.top = '0px';
-			return;
-		}
-		if(listEndTop - lineHeight < -listHeight){
-			list.style.top = -(listHeight - lineHeight) + "px";
-			return;
-		}		
-		//调整中间位置
-		diffVal = Math.abs(listEndTop) % lineHeight;
-		if(diffVal >= halfVal){
-			list.style.top = listEndTop - (lineHeight - diffVal) + "px";
-		}else if(diffVal < halfVal && diffVal !== 0){
-			list.style.top = listEndTop + diffVal + "px";
-		}
-	}
-	//利用调整位置后的数据计算选中项
-	function check(){
-		var listEndTop = list.offsetTop,
-			diffVal = Math.abs(listEndTop) / lineHeight;
-
-		//初始判断
-		if(!prevNode){
-			prevNode = li[diffVal];
-			prevNode.classList.add("act");
+		if(e.type === 'mouseup'){
+			document.removeEventListener('mousemove', this._moveHandler, false);
+			document.removeEventListener('mouseup', this._endHandler, false);
 		}
 
-		if(prevNode != li[diffVal]){
-			prevNode.classList.remove("act");
-			li[diffVal].classList.add("act");
-			prevNode = li[diffVal];		//保存选中元素
-		}
-		
-		result.innerHTML = li[diffVal].innerHTML;
+		this.stop = e.changedTouches ? e.changedTouches[0].pageY : e.pageY;
+
+		var speed,
+			dist = this.stop - this.start,   //鼠标滑动距离
+			time = new Date() - this.t;      //滑动时间
+
+		// if(time < 300){
+		// 	speed = dist / time;
+
+		// }
+
+		val	= this._adjustPosition( Math.round( this.p - dist / this.h ), this.min, this.max);
+console.log(val)
+		time = speed ? Math.max(0.1, Math.abs( (val - this.p) / speed ) * 0.1) : 0.1;
+
+		this._p = val;
+
+		this._onScroll(val, time, dist == 0);
 	}
 
-	function wheelDelta(event){
-		event = event || window.event;
-		if(event.preventDefault){
-			event.preventDefault();
-		}else{
-			event.returnValue = false;
-		}
-		
-		var listTop = list.offsetTop,
-			delta = event.wheelDelta || -event.detail;
 
-		if(delta < 0){
-			listTop -= lineHeight;
-			list.style.top = listTop + "px";			
-		}else{
-			listTop += lineHeight;
-			list.style.top = listTop + "px";
+	Scroll.prototype._onScroll = function(val, time, noAnimation){
+		var px = - val * this.h;  //计算移动距离
+
+		this.ul.style['transition'] = 'transform ' + (time ? time.toFixed(3) : 0) + 's ease-out';
+		this.ul.style['transform'] = 'translate3d(0,' + px + 'px, 0)';
+	
+		if(time && noAnimation){
+			this._onChange();
 		}
-		
-		correct();
-		check();
 	}
 
-	container.addEventListener("mousewheel", wheelDelta, false);
-	container.addEventListener("DOMMouseScroll", wheelDelta, false);
-	container.addEventListener("mousedown", moveList, false);
-	document.addEventListener("mousemove", moveList, false);
-	document.addEventListener("mouseup", moveList, false);
-}
+
+	Scroll.prototype._onChange = function(){
+		if(this.index != this._p){
+			this.index = this._p;
+			this.change(this);
+		}
+	}
+	Scroll.prototype._adjustPosition = function(val, min, max){
+		return Math.max(min, Math.min(val, max));
+	}
+	Scroll.prototype._getPosition = function(){
+		var matrix = getComputedStyle(this.ul)['transform'].split(')')[0].split(', ');
+		var y = matrix[13] || matrix[5];
+		return Math.round(- y / this.h);
+	}
+
+	window.UI.TouchScroll = Scroll;
+
+	var s = new Scroll({
+		el: document.getElementById('sc'),
+		change: function(value){
+			document.getElementById('result').innerHTML = value.index + 1;
+		}
+	});
+}();
